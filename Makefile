@@ -2,9 +2,9 @@
 all: help
 
 help:
-	@echo "<project-name> Makefile commands"
+	@echo "Access Manager Makefile commands"
 	@echo ""
-	@echo "build                 Executes the build of all images required to run <project-name> API"
+	@echo "build                 Executes the build of all images required to run Access Manager API"
 	@echo "down                  Stops all docker containers"
 	@echo "run                   Start all containers and keep attached"
 	@echo "run_local             Run application in the current terminal"
@@ -33,10 +33,11 @@ run: down
 	@docker-compose up --build
 
 run_local:
-	@eval $$(egrep -v '^#' variables.env | xargs) APP_PATH=$$PWD go run cmd/api/*.go
+	@eval $$(cat resources/config/local.properties | grep -v '^#' | sed 's/^/export /') && APP_PATH=$$PWD go run cmd/api/*.go
 
-fs:
-	@make down
+fs: down
+	@docker-compose build
+	@docker-compose up -d
 
 hooks:
 	@if [ ! -d "commands/git/pre-commit" ]; then mkdir -p commands/git/pre-commit; fi
@@ -48,23 +49,27 @@ hooks:
 	@chmod -R +x .git/hooks/pre-push
 
 test:
-	@docker-compose build --force-rm <project-name>
-	@docker-compose run --rm <project-name> /commands/run_test.sh
+	@docker-compose build --force-rm access-manager
+	@docker-compose run --rm access-manager /commands/run_test.sh
 
 cleanup:
 	@find . -type d -name mocks -exec rm -rf {} \;
 
 mocks: cleanup
+	@make load_env
 	@eval $$(egrep -v '^#' variables.env | xargs) APP_PATH=$$PWD go generate ./...
 
 test_local:
-	@eval $$(egrep -v '^#' variables.env | xargs) APP_PATH=$$PWD go test ./... -count 1 -tags=integration -cover -p=1
+	@make load_env
+	@eval $$(cat resources/config/local.properties | grep -v '^#' | sed 's/^/export /') && APP_PATH=$$PWD go test ./... -count 1 -tags=integration -cover -p=1
 
 test_up: down
+	@make load_env
 	@docker-compose up -d
 
 test_run:
-	@docker-compose exec <project-name> /commands/test.sh
+	@make load_env
+	@docker-compose exec access-managger /commands/test.sh
 
 .PHONY:
 specs_generate:

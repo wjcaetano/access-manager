@@ -1,4 +1,4 @@
-FROM golang:alpine3.19
+FROM golang:alpine3.19 AS builder
 
 ENV APPLICATION_PACKAGE=./cmd/access-manager
 ENV APP_PATH=/app

@@ -1,8 +1,8 @@
 package main
 
-import "fmt"
+import "access-manager/cmd/api/modules"
 
 func main() {
-	fmt.Println("Hello World")
-
+	app := modules.NewApp()
+	app.Run()
 }

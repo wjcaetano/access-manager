@@ -1,13 +1,90 @@
-version: "2.1"
+version: "3.8"
 services:
   access-manager:
-    build: .
-    command: ["/commands/run_local.sh"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: [ "./commands/run_local.sh" ]
     container_name: access-manager
-    env_file: variables.env
+    depends_on:
+      testlocal:
+        condition: service_healthy
+      kafkalocal:
+        condition: service_healthy
+    env_file: resources/config/local.properties
     ports:
       - "8080:8080"
     restart: always
     volumes:
       - .:/app
       - $HOME/go/pkg/mod:/go/pkg/mod
+    networks:
+      - app-network
+
+  testlocal:
+    container_name: testlocal
+    env_file: resources/config/local.properties
+    image: mysql:8.0.31
+    restart: always
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./commands/init-mysql:/docker-entrypoint-initdb.d
+      - db_data:/var/lib/mysql
+    networks:
+      - app-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  kafkalocal:
+    container_name: kafkalocal
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    networks:
+        - app-network
+    env_file: resources/config/local.properties
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "9092" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+          max-size: "200k"
+          max-file: "10"
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    networks:
+      - app-network
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    logging:
+      driver: "json-file"
+      options:
+          max-size: "200k"
+          max-file: "10"
+
+volumes:
+  db_data:
+  kafka_data:
+  zookeeper_data:
+  zookeeper_logs:
+
+networks:
+  app-network:
+    driver: bridge
