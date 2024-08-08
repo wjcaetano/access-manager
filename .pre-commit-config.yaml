@@ -3,13 +3,13 @@ repos:
   # If you want them to run on each commit, uncomment them
   # These are OPTIONAL.
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-    rev: v2.3.0
+    rev: v2.14.0
     hooks:
       - id: pretty-format-golang
         args:
           - --autofix
   - repo: https://github.com/golangci/golangci-lint
-    rev: v1.56.2
+    rev: v1.59.1
     hooks:
       - id: golangci-lint
         entry: golangci-lint run
@@ -19,7 +19,7 @@ repos:
           - --config=.code_quality/.golangci.yml
           - --new-from-rev=HEAD~1 # comment this arg if you want to run pre-commit run --all-files
   - repo: https://github.com/melisource/fury_datasec-git-hooks
-    rev: 1.0.1
+    rev: 1.0.3
     hooks:
       - id: pre_commit_hook
         stages: [commit]
