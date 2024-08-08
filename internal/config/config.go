@@ -3,16 +3,18 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/magiconair/properties"
 )
 
 const (
-	localConfigScope   = "resources/config/local.properties"
-	localConfigFileEnv = "LOCAL_CONFIG_FILE_NAME"
-	scopeEnv           = "SCOPE"
-	appPathEnv         = "APP_PATH"
-	localScope         = "local"
+	localConfigScope       = "resources/config/local.properties"
+	applicationConfigScope = "resources/config/application.properties"
+	LocalConfigFileEnv     = "LOCAL_CONFIG_FILE_NAME"
+	scopeEnv               = "SCOPE"
+	appPathEnv             = "APP_PATH"
+	localScope             = "local"
 )
 
 type (
@@ -25,9 +27,9 @@ type (
 	}
 
 	Configuration struct {
-		AppPath  string `properties:"app_path,default="`
-		Scope    string `properties:"scope,default="`
-		Database Database
+		AppPath  string   `properties:"app_path,default="`
+		Scope    string   `properties:"scope,default="`
+		Database Database `properties:"database"`
 	}
 )
 
@@ -68,6 +70,8 @@ func loadProperties() (*properties.Properties, error) {
 
 func checkMandatoryEnvs() error {
 	mandatoryEnvs := [...]string{appPathEnv, scopeEnv}
+	app := getEnv(appPathEnv, "")
+	fmt.Println(app)
 	for _, env := range mandatoryEnvs {
 		if _, found := os.LookupEnv(env); !found {
 			return fmt.Errorf("environment %s not provided", env)
@@ -92,13 +96,39 @@ func getEnv(key string, defaultValue string) string {
 }
 
 func loadLocalProperties() *properties.Properties {
-	configFile := getEnv(localConfigFileEnv, os.Getenv(appPathEnv)+localConfigScope)
+	appPath, err := getProjectPath()
+	if err != nil {
+		return nil
+	}
+	configFile := filepath.Join(appPath, localConfigScope)
+
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		return nil
+	}
 
 	return properties.MustLoadFile(configFile, properties.UTF8)
 }
 
 func loadServiceProperties() (*properties.Properties, error) {
-	return properties.LoadFile(os.Getenv(appPathEnv)+"resources/config/service.properties", properties.UTF8)
+	inputConfig := os.Getenv("configFileName")
+	if inputConfig == "" {
+		inputConfig = applicationConfigScope
+	}
+
+	appPath, err := getProjectPath()
+	if err != nil {
+		return nil, fmt.Errorf("error getting working directory: %w", err)
+	}
+
+	configFile := filepath.Join(appPath, inputConfig)
+
+	if _, err := os.Stat(configFile); os.IsNotExist(err) {
+		return nil, fmt.Errorf("configuration file %s not found", inputConfig)
+	}
+
+	prop, _ := properties.LoadFile(configFile, properties.UTF8)
+
+	return prop, nil
 }
 
 func decodeConfig(prop *properties.Properties) (Configuration, error) {
@@ -124,10 +154,21 @@ func buildDatabaseDSN() (string, error) {
 	dbName := os.Getenv("DB_NAME")
 
 	if user == "" || password == "" || host == "" || port == "" || dbName == "" {
-		return dns, fmt.Errorf("missing environment variables")
+		return dns, fmt.Errorf("missing dns environment variables")
 	}
 
 	dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local", user, password, host, port, dbName)
 
 	return dns, nil
+}
+
+func getProjectPath() (string, error) {
+	workingDir, err := os.Getwd()
+	if err != nil {
+		return "", fmt.Errorf("error getting working directory: %w", err)
+	}
+
+	workingDir = filepath.Dir(filepath.Dir(workingDir))
+
+	return workingDir, nil
 }
