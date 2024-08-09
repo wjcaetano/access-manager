@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/magiconair/properties"
 )
@@ -157,7 +158,7 @@ func buildDatabaseDSN() (string, error) {
 		return dns, fmt.Errorf("missing dns environment variables")
 	}
 
-	dns = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local", user, password, host, port, dbName)
+	dns = strings.ToLower(fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4&loc=Local", user, password, host, port, dbName))
 
 	return dns, nil
 }
