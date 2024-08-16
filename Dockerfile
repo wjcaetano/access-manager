@@ -12,7 +12,7 @@ RUN apk add nodejs npm
 RUN	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/v1.56.2/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
 
 RUN go install github.com/arthurgustin/godepth@latest
-RUN go install github.com/fdaines/arch-go@v1.4.0
+RUN go install github.com/fdaines/arch-go@latest
 RUN npm -g install directory-validator
 
 ADD ./commands/*.sh /commands/

@@ -8,6 +8,7 @@ import (
 
 	"github.com/magiconair/properties"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_DecodeConfig(t *testing.T) {
@@ -26,10 +27,10 @@ func Test_DecodeConfig(t *testing.T) {
 		}
 
 		result, err := decodeConfig(prop)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		isEqual := reflect.DeepEqual(result, expectedResult)
-		assert.Equal(t, true, isEqual)
+		assert.True(t, isEqual)
 	})
 
 	t.Run("should return error when decode config", func(t *testing.T) {
@@ -37,7 +38,7 @@ func Test_DecodeConfig(t *testing.T) {
 			"scope": "local",
 		})
 		_, err := decodeConfig(prop)
-		assert.Error(t, err)
+		require.Error(t, err)
 	})
 }
 
@@ -71,7 +72,7 @@ func Test_OverrideConfigurations(t *testing.T) {
 		config.overrideConfigurations()
 
 		isEqual := reflect.DeepEqual(config, expectedResult)
-		assert.Equal(t, true, isEqual)
+		assert.True(t, isEqual)
 	})
 }
 
@@ -80,7 +81,7 @@ func Test_LoadProperties(t *testing.T) {
 		cleanEnvsNewConfig(t)
 		expectedError := "environment APP_PATH not provided"
 		_, err := loadProperties()
-		assert.EqualError(t, err, expectedError)
+		require.EqualError(t, err, expectedError)
 	})
 
 	t.Run("should return local properties when scope is local", func(t *testing.T) {
@@ -88,7 +89,7 @@ func Test_LoadProperties(t *testing.T) {
 		setupTesLoadLocalProperties(t)
 
 		result, err := loadProperties()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, result)
 	})
 
@@ -97,7 +98,7 @@ func Test_LoadProperties(t *testing.T) {
 		setupSubTestLoadServiceProperties(t)
 
 		result, err := loadProperties()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.NotNil(t, result)
 	})
 }
@@ -120,7 +121,7 @@ func Test_NewConfig(t *testing.T) {
 		setupNewConfigEnv(t)
 
 		appPath, err := getProjectPath()
-		assert.NoError(t, err)
+		require.NoError(t, err)
 
 		expectedResult := Configuration{
 			AppPath: appPath,
@@ -136,8 +137,8 @@ func Test_NewConfig(t *testing.T) {
 
 		result, err := NewConfig()
 
-		assert.NoError(t, err)
-		assert.Equal(t, expectedResult, result)
+		require.NoError(t, err)
+		require.Equal(t, expectedResult, result)
 	})
 }
 
@@ -145,7 +146,7 @@ func setupTesLoadLocalProperties(t *testing.T) func(t *testing.T) {
 	t.Log("setup test load local properties")
 
 	appPath, err := getProjectPath()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	_ = os.Setenv("APP_PATH", appPath)
 	_ = os.Setenv("SCOPE", localConfigScope)
@@ -161,7 +162,7 @@ func setupTesLoadLocalProperties(t *testing.T) func(t *testing.T) {
 func setupSubTestLoadServiceProperties(t *testing.T) func(t *testing.T) {
 	t.Log("setup sub test load service properties")
 	appPath, err := getProjectPath()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	_ = os.Setenv("SCOPE", "")
 	_ = os.Setenv("APP_PATH", appPath)
@@ -228,7 +229,7 @@ func setupNewConfigEnv(t *testing.T) {
 	_ = os.Setenv("DB_HOST", "testlocal")
 
 	dsn, err := buildDatabaseDSN()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	_ = os.Setenv("DB_DSN", dsn)
 }
