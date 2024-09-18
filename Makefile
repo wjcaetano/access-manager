@@ -119,10 +119,12 @@ lint-arch:
 
 lint-directories:
 	@echo "Executing directory-validator"
-	commands/directory-validator.sh
+	@export PATH=$$PATH:/usr/local/go/bin && export PATH=$$PATH:/usr/local/bin/docker && commands/directory-validator.sh
+	@source ~/.bashrc
 
 GOIMPORTS=goimports
 
 format:
 	@echo "Executing goimports"
 	@find . -name "*.go" -exec $(GOIMPORTS) -w {} \;
+
