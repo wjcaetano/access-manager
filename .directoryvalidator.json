@@ -30,7 +30,6 @@
     "Dockerfile",
     "Makefile",
     "pipeline",
-    ".fury",
     "test",
     "tests",
     ".project",
@@ -42,7 +41,7 @@
     "CHANGELOG.md",
     "execution.log",
     ".DS_Store",
-    "meli-system.yml"
+    ".idx/dev.nix"
   ],
   "ignoreDirs": [
     "commands",
@@ -60,7 +59,8 @@
     "internal",
     "migrations",
     "pkg",
-    "resources"
+    "resources",
+    ".vscode"
   ],
   "commonRules": {
     "rule_mocks": {
